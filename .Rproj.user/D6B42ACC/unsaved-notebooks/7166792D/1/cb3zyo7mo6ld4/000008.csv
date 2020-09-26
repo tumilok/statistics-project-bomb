@@ -1,0 +1,4 @@
+"0","## Czynności przygotowawcze - załadowanie potrzebnych pakietów oraz utworzenie i wypełnienie bazy danych"
+"0","library(tidyverse)"
+"2","Error in library(tidyverse) : there is no package called ‘tidyverse’
+"

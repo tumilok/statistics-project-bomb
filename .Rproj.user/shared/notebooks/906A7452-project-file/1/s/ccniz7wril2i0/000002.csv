@@ -1,0 +1,8 @@
+"0","countries <- tmp %>% filter(TGT_COUNTRY == ""DENMARK"" || TGT_COUNTRY == ""AUSTRIA"" || TGT_COUNTRY == ""BELGIUM"" || TGT_COUNTRY == ""FRANCE"" || TGT_COUNTRY == 'GERMANY' || TGT_COUNTRY == 'ITALY' || TGT_COUNTRY == 'CHINA' || TGT_COUNTRY == 'POLAND' || TGT_COUNTRY == 'JAPAN')"
+"0",""
+"0","g <- ggplot(countries, aes(x = date, y = count)) + "
+"0","  geom_bar(stat = ""identity"") +"
+"0","  theme_bw() +"
+"0","  labs(x = ""Date"", y = ""Nuumber of Attacks"") +"
+"0","  scale_x_date(labels = date_format(""%m-%Y"")) + facet_wrap(TGT_COUNTRY ~ ., nrow = 3, ncol = 3, scales =""free_y"")"
+"0","print(g)"

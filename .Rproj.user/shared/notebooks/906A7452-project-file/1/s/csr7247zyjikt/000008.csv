@@ -1,0 +1,5 @@
+"0","kraj_waga <-dbGetQuery(conn, ""SELECT TGT_COUNTRY as Country, sum(TOTAL_TONS) as Weight FROM Bombings WHERE Total_tons is not null and Country != '' and COUNTRY_FLYING_MISSION = 'USA' AND Country NOT LIKE '%UNKNOWN%' GROUP BY Country"")"
+"0","kraj_waga <- kraj_waga %>% arrange(desc(Weight)) %>% head(40)"
+"0","g <- ggplot(kraj_waga,aes(Country, Weight))+"
+"0","geom_bar(stat = ""identity"")+theme(axis.text.x=element_text(angle=90, hjust=1))"
+"0","print(g)"

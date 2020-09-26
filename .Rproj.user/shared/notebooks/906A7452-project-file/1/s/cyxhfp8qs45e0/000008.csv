@@ -1,0 +1,7 @@
+"0","tmp <- dbGetQuery(conn, ""select  AIRCRAFT_NAME from Bombings where AIRCRAFT_NAME is not NULL AND AIRCRAFT_NAME != ''"")"
+"0","tmp <- tmp %>% group_by(AIRCRAFT_NAME) %>% summarize(count = n())"
+"0","use<-tmp %>%arrange(desc(count)) %>% head(60)"
+"0","use<-ggplot(use,aes(AIRCRAFT_NAME,count)) + geom_point() +"
+"0","  labs(x = ""Plane"", y = ""Number of Uses"")+"
+"0"," theme(axis.text.x=element_text(angle=90, hjust=1))"
+"0","print(use)"

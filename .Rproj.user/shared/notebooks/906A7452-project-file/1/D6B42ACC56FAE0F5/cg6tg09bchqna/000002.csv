@@ -1,0 +1,1 @@
+"0","samoloty <-dbGetQuery(conn, ""SELECT AC_AIRBORNE as Launched, AC_ATTACKING as Arrived, strftime('%d-%m-%Y', MSNDATE) as Date FROM Bombings WHERE Launched IS NOT NULL AND Arrived IS NOT NULL AND Arrived <= Launched AND Date IS NOT NULL"")"

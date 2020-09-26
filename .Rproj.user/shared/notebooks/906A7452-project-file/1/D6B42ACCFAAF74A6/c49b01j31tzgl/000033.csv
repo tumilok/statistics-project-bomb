@@ -1,0 +1,6 @@
+"0","tmp <- dbGetQuery(conn, ""SELECT TGT_COUNTRY, strftime('1-%m-%Y', MSNDATE) as date  FROM Bombings WHERE TGT_COUNTRY is not NULL AND TGT_COUNTRY != '' AND TGT_COUNTRY NOT LIKE '%UNKNOWN%' AND date IS NOT NULL"")"
+"0","tmp$date <- as.Date(tmp$date,format=""%d-%m-%Y"")"
+"0","tmp <- tmp %>% group_by(TGT_COUNTRY, date) %>% summarize(count = n())"
+"2","Error in summarize(., count = n()) : 
+  argument ""by"" is missing, with no default
+"

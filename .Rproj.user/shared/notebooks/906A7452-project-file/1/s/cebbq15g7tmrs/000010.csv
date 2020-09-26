@@ -1,0 +1,7 @@
+"0","nazwa_waga <-dbGetQuery(conn, ""SELECT AIRCRAFT_NAME as Name, sum(TOTAL_TONS) / sum(AC_ATTACKING) as Weight"
+"0","FROM Bombings "
+"0","where Total_tons is not null and Total_tons != 0 and Name != '' AND AC_ATTACKING is not null AND AC_ATTACKING != 0 AND Name not like 'WELLESLEY'"
+"0","GROUP BY Name"")"
+"0","g <- ggplot(nazwa_waga,aes(Name, Weight))+"
+"0","geom_bar(stat = ""identity"")+theme(axis.text.x=element_text(angle=90, hjust=1))"
+"0","print(g)"

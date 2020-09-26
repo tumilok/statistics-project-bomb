@@ -1,0 +1,201 @@
+---
+title: "Aerial bombings in World War II"
+output: pdf_document
+---
+
+```{r echo=FALSE, message=FALSE}
+## Czynności przygotowawcze - załadowanie potrzebnych pakietów
+library(RSQLite)
+library(tidyverse)
+library(ggpubr)
+library(scales)
+df <- read.csv("THOR_WWII_DATA_CLEAN2.csv")
+conn <- dbConnect(RSQLite::SQLite(), "gtd.db")
+#dbWriteTable(conn, "Bombings", df)
+```
+
+# 1. Wstęp
+
+Raport zawiera analizę danych pochodzących z Data Base, zawierającej listę blisko 180 tys. bombardowań organizowane przez Amerykanów i Brytyjczyków w ciągu Drugiej Wojny Światowej. Każde opisane jest przez najwyżej 65 zmiennych, określających m.in. datę ataku, jego lokalizację, kraj, który organizował bombardowanie, rodzaj samolotu, waga materiałów wybuchowych itd.
+
+# 2. Analiza wstępna/eksploracyjna
+
+## 2.1 Zależność ilości bombardowań od czasu
+
+Najpierw sprawdźmy, jak ilość bombardowań jest uzależniona od czasu po wszystkich krajach świata, pozwoli nam to stwierdzić, w jaki moment Drugiej Wojny Światowej odbywało się najwięcej ataków bombowych.
+
+```{r echo=FALSE}
+tmp <- dbGetQuery(conn, "SELECT TGT_COUNTRY, strftime('1-%m-%Y', MSNDATE) as date  FROM Bombings WHERE TGT_COUNTRY is not NULL AND TGT_COUNTRY != '' AND TGT_COUNTRY NOT LIKE '%UNKNOWN%' AND date IS NOT NULL")
+tmp$date <- as.Date(tmp$date,format="%d-%m-%Y")
+tmp <- tmp %>% group_by(TGT_COUNTRY, date) %>% summarize(count = n())
+
+g <- ggplot(tmp, aes(x = date, y = count)) + 
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  labs(x = "Date", y = "Number of Attacks") +
+  scale_x_date(labels = date_format("%m-%Y"))
+print(g)
+```
+
+Na wykresie można zauważyć, że najwięcej bombardowań było zrobiono bliżej końca Drugiej Wojny Światowej (początek 1945 roku).  
+
+## 2.2 Zależność ilości bombardowań od czasu wybranych krajów
+
+Następnie sprawdźmy, jak ilość bombardowań jest uzależniona od różnych krajów świata, pozwoli nam to stwierdzić, które miejsca były najbardziej atakowane.
+
+``` {r echo = FALSE} 
+countries <- tmp %>% filter(TGT_COUNTRY == "DENMARK" || TGT_COUNTRY == "AUSTRIA" || TGT_COUNTRY == "BELGIUM" || TGT_COUNTRY == "FRANCE" || TGT_COUNTRY == 'GERMANY' || TGT_COUNTRY == 'ITALY' || TGT_COUNTRY == 'CHINA' || TGT_COUNTRY == 'POLAND' || TGT_COUNTRY == 'JAPAN')
+
+g <- ggplot(countries, aes(x = date, y = count)) + 
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  labs(x = "Date", y = "Nuumber of Attacks") +
+  scale_x_date(labels = date_format("%m-%Y")) + facet_wrap(TGT_COUNTRY ~ ., nrow = 3, ncol = 3, scales ="free_y")
+print(g)
+```
+
+Na wykresie zauważyć można nagły wzrost ilości bombardowań w Austrii, Chinach, Francji, Niemcach, Włochach, Japonii oraz Polsce ok. roku 1944 - jest prawdopodobnie związany z podchodzącym końcem wojny; widać także chwilowy wzrost ilości ataków w Belgii oraz Danii.
+
+Podczas całej wojny można zauważyć, że najwięcej ataków za jeden miesiąc było w Niemczech (prawie 7 tys. bombardowań), Francji (ponad 4.5 tys. bombardowań) oraz Włoszech (ponad 6 tys. bombardowań).
+
+## 2.3 Top 20 krajów pod względem ilości bombardowań
+
+Następnie chcemy zbadać najwięcej bombardowane kraje podczas Drugiej Wojny Światowej
+
+```{r echo=FALSE, fig.height=4}
+tmp <- dbGetQuery(conn, "SELECT TGT_COUNTRY  FROM Bombings WHERE TGT_COUNTRY is not NULL AND TGT_COUNTRY != '' AND TGT_COUNTRY NOT LIKE '%UNKNOWN%'")
+tmp <- tmp %>% group_by(TGT_COUNTRY) %>% summarize(count = n())
+tmp<-tmp %>% arrange(desc(count)) %>% head(20)
+g <- ggplot(tmp, aes(x = TGT_COUNTRY, y = count)) + 
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  labs(x = "Country", y = "Number of Attacks")+
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+print(g)
+```
+
+Widzimy, że najwięcej bombardowań było realizowane w Niemcach, na drugim miejscu są Włochy, na trzecim Francja.
+
+## 2.4 Najczęściej używane samoloty w ciągu wojny
+
+Dowiemy się, jaki samoloty były używane najczęściej podczas Drugiej Wojny Światowej.
+
+```{r echo=FALSE, fig.height=4, fig.width=10}
+tmp <- dbGetQuery(conn, "select  AIRCRAFT_NAME from Bombings where AIRCRAFT_NAME is not NULL AND AIRCRAFT_NAME != ''")
+tmp <- tmp %>% group_by(AIRCRAFT_NAME) %>% summarize(count = n())
+use<-tmp %>%arrange(desc(count)) %>% head(60)
+use<-ggplot(use,aes(AIRCRAFT_NAME,count)) + geom_point() +
+  labs(x = "Plane", y = "Number of Uses")+
+ theme(axis.text.x=element_text(angle=90, hjust=1))
+print(use)
+```
+
+Jak widzimy, niektóre samoloty takie jak: B17, B24, B25, A20 były najczęściej używane ze względu na ich szeroką produkcja, wysoką wydajność i zdolność bojową.
+
+## 2.5 Najczęściej używane samoloty w ciągu wojny wybranych krajów
+
+Teraz interesuje nas przynależność samolotów do poszczególnych krajów. Na pierwszym wykresie widzimy używalność samolotów Wielkiej Brytanii.
+
+```{r echo=FALSE, fig.height=6, fig.width=10}
+tmp <- dbGetQuery(conn, "select  AIRCRAFT_NAME,COUNTRY_FLYING_MISSION from Bombings where AIRCRAFT_NAME is not NULL AND AIRCRAFT_NAME != ''")
+planesB<-tmp %>% filter (COUNTRY_FLYING_MISSION=='GREAT BRITAIN');
+planesB <- planesB %>% group_by(AIRCRAFT_NAME) %>% summarize(count = n())
+planesB<- ggplot(planesB,aes(AIRCRAFT_NAME,count)) + geom_point() +
+  labs(x = "Plane", y = "Number of uses")+
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+print(planesB)
+```
+Trzy najczęściej używane samoloty Wielkiej Brytanii: WELLESLEY, LANCASTER, LIGHT
+
+Na drugim wykresie widzimy używalność samolotów USA.
+
+```{r echo=FALSE, fig.height=5, fig.width=10}
+tmp <- dbGetQuery(conn, "select  AIRCRAFT_NAME,COUNTRY_FLYING_MISSION from Bombings where AIRCRAFT_NAME is not NULL AND AIRCRAFT_NAME != ''")
+planesU<-tmp %>% filter ((COUNTRY_FLYING_MISSION=='USA'))
+planesU <- planesU %>% group_by(AIRCRAFT_NAME) %>% summarize(count = n())
+planesU<- ggplot(planesU,aes(AIRCRAFT_NAME,count)) + geom_point() +
+  labs(x = "Plane", y = "Number of uses")+
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+print(planesU)
+```
+Trzy najczęściej używane samoloty Wielkiej Brytanii: B24, B17, B25
+
+Można zauważyć, że ilość wykorzystania samolotów USA, jest większe czym Brytanii.
+
+## 2.6 Zależność między nazwą samolotu i średnia wagą bomb dostarczonych do celu przez jeden samolot
+
+Taka zależność pokazuję jaki samolot był najefektywniejszy w dostarczaniu bomb.
+
+```{r echo=FALSE, fig.height=6, fig.width=10}
+nazwa_waga <-dbGetQuery(conn, "SELECT AIRCRAFT_NAME as Name, sum(TOTAL_TONS) / sum(AC_ATTACKING) as Weight
+FROM Bombings 
+where Total_tons is not null and Total_tons != 0 and Name != '' AND AC_ATTACKING is not null AND AC_ATTACKING != 0 AND Name not like 'WELLESLEY'
+GROUP BY Name")
+g <- ggplot(nazwa_waga,aes(Name, Weight))+
+geom_bar(stat = "identity")+theme(axis.text.x=element_text(angle=90, hjust=1))
+print(g)
+```
+
+Na tym histogramie widać, że wyróżniają się trzy samoloty, które mają największą wagę dostarczonych do celu bomb.
+Pominięty jest samolot WELLESLEY z powodu błędnych dannych.
+
+## 2.7 Zależność między krajami, na które były wypuszczone bomby, i wagą bomb dostarczonych do celu.
+
+Takie zależności pokazują jaki kraj był najbardziej atakowany.
+
+Dla łatwości podzieliliśmy to na trzy histogramy w zależności od tego, który kraj był agresorem.
+
+### Ameryka
+
+Dobrze widać, że najbardziej atakowane były Niemcy.
+
+```{r echo=FALSE, fig.height=7, fig.width=8}
+kraj_waga <-dbGetQuery(conn, "SELECT TGT_COUNTRY as Country, sum(TOTAL_TONS) as Weight FROM Bombings WHERE Total_tons is not null and Country != '' and COUNTRY_FLYING_MISSION = 'USA' AND Country NOT LIKE '%UNKNOWN%' GROUP BY Country")
+kraj_waga <- kraj_waga %>% arrange(desc(Weight)) %>% head(40)
+g <- ggplot(kraj_waga,aes(Country, Weight))+
+geom_bar(stat = "identity")+theme(axis.text.x=element_text(angle=90, hjust=1))
+print(g)
+```
+
+### Wielka Brytania
+
+Tutaj największym celem też były Niemcy.
+
+```{r echo=FALSE, fig.height=4}
+kraj_waga <-dbGetQuery(conn, "SELECT TGT_COUNTRY as Country, sum(TOTAL_TONS) AS Weight FROM Bombings WHERE Total_tons IS NOT NULL AND Country != '' AND Country NOT LIKE '%UNKNOWN%' AND COUNTRY_FLYING_MISSION = 'GREAT BRITAIN' GROUP BY Country")
+g <- ggplot(kraj_waga,aes(Country, Weight))+
+geom_bar(stat = "identity")+theme(axis.text.x=element_text(angle=90, hjust=1))
+print(g)
+```
+
+### Australia
+
+W tym przypadku najbardziej atakowana była Nowa Gwinea.
+
+```{r echo=FALSE, fig.height=4}
+kraj_waga <-dbGetQuery(conn, "SELECT TGT_COUNTRY as Country, sum(TOTAL_TONS) as Weight
+FROM Bombings 
+where Total_tons is not null and Country != '' and COUNTRY_FLYING_MISSION = 'AUSTRALIA'
+GROUP BY Country")
+g <- ggplot(kraj_waga,aes(Country, Weight))+
+geom_bar(stat = "identity")+theme(axis.text.x=element_text(angle=90, hjust=1))
+print(g)
+```
+
+# 3. Modelowanie statystyczne
+
+## 3.1 Zależność między ilością wysłanych samolotów a ilością dotartych do celu
+
+```{r echo=FALSE}
+samoloty <-dbGetQuery(conn, "SELECT AC_AIRBORNE as Launched, AC_Dropping as Dropping FROM Bombings WHERE Launched IS NOT NULL AND Dropping IS NOT NULL AND Dropping <= Launched")
+g <- ggplot(samoloty, aes(Launched, Dropping)) + geom_point() + geom_smooth(method = "lm") + labs(x ="Number of aircrafts went to aim", y = "Number of aircrafts arrived to aim")
+linearModel <- lm(Launched ~ Dropping, data=samoloty)
+print(g)
+```
+
+Zauważyć można, że żaden punkt nie znajduje się powyżej prostej regresji, jest to związane z tym, że ilość samolotów wysłanych nie może przekroczyć liczbę samolotów, które osiągnęli cel.
+Parametry prostej regresji:
+
+```{r echo=FALSE}
+summary(linearModel)
+```

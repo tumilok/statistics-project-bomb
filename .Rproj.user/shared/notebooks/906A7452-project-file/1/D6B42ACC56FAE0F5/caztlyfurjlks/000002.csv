@@ -1,0 +1,8 @@
+"0","## Czynności przygotowawcze - załadowanie potrzebnych pakietów"
+"0","library(RSQLite)"
+"0","library(tidyverse)"
+"0","library(ggpubr)"
+"0","library(scales)"
+"0","df <- read.csv(""THOR_WWII_DATA_CLEAN2.csv"")"
+"0","conn <- dbConnect(RSQLite::SQLite(), ""gtd.db"")"
+"0","#dbWriteTable(conn, ""Bombings"", df)"

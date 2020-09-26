@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1580840190633.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3004061874",
+    "id" : "B05B72BA",
+    "lastKnownWriteTime" : 1580211218,
+    "last_content_update" : 1580211218,
+    "path" : "~/Workspace/git-workspace/statistics-project-bomb/project-file.Rmd",
+    "project_path" : "project-file.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "33,14",
+        "scrollLine" : "25",
+        "tempName" : "Untitled2"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

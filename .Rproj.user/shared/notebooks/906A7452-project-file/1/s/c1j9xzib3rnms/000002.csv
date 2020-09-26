@@ -1,0 +1,7 @@
+"0","tmp <- dbGetQuery(conn, ""select  AIRCRAFT_NAME,COUNTRY_FLYING_MISSION from Bombings where AIRCRAFT_NAME is not NULL AND AIRCRAFT_NAME != ''"")"
+"0","planesU<-tmp %>% filter ((COUNTRY_FLYING_MISSION=='USA'))"
+"0","planesU <- planesU %>% group_by(AIRCRAFT_NAME) %>% summarize(count = n())"
+"0","planesU<- ggplot(planesU,aes(AIRCRAFT_NAME,count)) + geom_point() +"
+"0","  labs(x = ""Plane"", y = ""Number of uses"")+"
+"0","  theme(axis.text.x=element_text(angle=90, hjust=1))"
+"0","print(planesU)"
